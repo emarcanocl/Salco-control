@@ -1,0 +1,324 @@
+```html
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Control de Turnos</title>
+    
+    <meta name="mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <meta name="theme-color" content="#4f46e5">
+    
+    <link rel="manifest" href="data:application/manifest+json;base64,ewogICJuYW1lIjogIkNvbnRyb2wgZGUgVHVybm9zIiwKICAic2hvcnRfbmFtZSI6ICJUdXJub3MiLAogICJkaXNwbGF5IjogInN0YW5kYWxvbmUiLAogICJiYWNrZ3JvdW5kX2NvbG9yIjogIiNmOGZhZmMiLAogICJ0aGVtZV9jb2xvciI6ICIjNGY0NmU1IiwKICAiaWNvbnMiOiBbeyJzcmMiOiAiZGF0YTppbWFnZS9zdmcreG1sO3V0ZjgsJTBBPHN2ZyB4bWxucz0naHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmcnIHZpZXdCb3g9JzAgMCAyNCAyNCcgZmlsbD0nJTIzNGY0NmU1Jz48cmVjdCB3aWR0aD0nMjQnIGhlaWdodD0nMjQnIHJ4PSc0JyByeT0nNCcvPjwvc3ZnPiIsICJzaXplcyI6ICI1MTJ4NTEyIiwgInR5cGUiOiAiaW1hZ2Uvc3ZnK3htbCIsICJwdXJwb3NlIjogImFueSBtYXNrYWJsZSJ9XQp9">
+    
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+
+    <style>
+        body { -webkit-tap-highlight-color: transparent; }
+        .pb-safe { padding-bottom: env(safe-area-inset-bottom, 20px); }
+        .tab-content { display: none; }
+        .tab-content.active { display: block; animation: fadeIn 0.3s ease-in-out; }
+        @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+        
+        /* Estilos para los selectores activos */
+        input[type="checkbox"]:checked + div {
+            border-color: #4f46e5;
+            background-color: #eef2ff;
+        }
+        input[type="checkbox"]:checked + div .icon-box {
+            background-color: white;
+            box-shadow: 0 1px 2px 0 rgba(0, 0, 0, 0.05);
+        }
+        input[type="checkbox"]:checked + div .check-circle {
+            border-color: #4f46e5;
+            background-color: #4f46e5;
+        }
+        input[type="checkbox"]:checked + div .check-circle i {
+            display: block;
+        }
+    </style>
+
+    <script>
+        if ('serviceWorker' in navigator) {
+            window.addEventListener('load', () => {
+                const swCode = "self.addEventListener('install', e => self.skipWaiting()); self.addEventListener('activate', e => self.clients.claim()); self.addEventListener('fetch', e => {});";
+                const blob = new Blob([swCode], {type: 'application/javascript'});
+                navigator.serviceWorker.register(URL.createObjectURL(blob)).catch(()=>console.log("SW bypass"));
+            });
+        }
+    </script>
+</head>
+<body class="bg-slate-50 font-sans text-slate-800 pb-24">
+
+    <header class="bg-indigo-600 text-white p-4 sticky top-0 z-30 shadow-lg">
+        <div class="max-w-md mx-auto flex justify-between items-center">
+            <div class="flex items-center gap-3">
+                <i class="fa-solid fa-calendar-days text-xl"></i>
+                <span class="font-bold text-lg tracking-tight">Control de Turnos</span>
+            </div>
+        </div>
+    </header>
+
+    <div id="toast" class="fixed top-20 left-1/2 -translate-x-1/2 z-50 px-6 py-3 rounded-full shadow-2xl text-white font-medium flex items-center gap-2 opacity-0 pointer-events-none transition-opacity duration-300">
+        <i id="toast-icon" class="fa-solid"></i>
+        <span id="toast-msg"></span>
+    </div>
+
+    <main class="max-w-md mx-auto p-4 space-y-6">
+        
+        <section id="tab-registro" class="tab-content active">
+            <div class="bg-white p-6 rounded-3xl shadow-sm border border-slate-100 space-y-4">
+                <div class="flex items-center gap-2 text-indigo-600 mb-2">
+                    <i class="fa-regular fa-calendar text-lg"></i>
+                    <h2 class="font-bold">Nuevo Registro</h2>
+                </div>
+
+                <input type="date" id="input-fecha" class="w-full p-4 bg-slate-50 border border-slate-200 rounded-2xl text-lg font-medium focus:ring-2 ring-indigo-500 outline-none transition-all">
+                
+                <div class="bg-indigo-50 p-3 rounded-xl text-indigo-700 text-sm font-semibold inline-flex items-center gap-2">
+                    Día detectado: <span id="lbl-tipo-dia">Hábil</span> 
+                    <span id="lbl-bono-dia" class="bg-indigo-200 text-indigo-800 px-2 py-0.5 rounded text-xs hidden"></span>
+                </div>
+                
+                <div class="grid grid-cols-1 gap-3 pt-2">
+                    <label class="cursor-pointer">
+                        <input type="checkbox" id="chk-feriado" class="hidden">
+                        <div class="flex items-center justify-between p-4 rounded-2xl border-2 border-slate-100 bg-white hover:border-slate-200 transition-all">
+                            <div class="flex items-center gap-4">
+                                <div class="icon-box w-10 h-10 rounded-xl flex items-center justify-center bg-slate-50">
+                                    <i class="fa-solid fa-sun text-orange-500 text-lg"></i>
+                                </div>
+                                <div>
+                                    <span class="block font-bold text-slate-700">Feriado</span>
+                                    <span class="block text-xs text-slate-500 font-medium" id="lbl-val-feriado"></span>
+                                </div>
+                            </div>
+                            <div class="check-circle w-6 h-6 rounded-full border-2 border-slate-300 flex items-center justify-center">
+                                <i class="fa-solid fa-check text-white text-xs hidden"></i>
+                            </div>
+                        </div>
+                    </label>
+
+                    <label class="cursor-pointer">
+                        <input type="checkbox" id="chk-doble" class="hidden">
+                        <div class="flex items-center justify-between p-4 rounded-2xl border-2 border-slate-100 bg-white hover:border-slate-200 transition-all">
+                            <div class="flex items-center gap-4">
+                                <div class="icon-box w-10 h-10 rounded-xl flex items-center justify-center bg-slate-50">
+                                    <i class="fa-solid fa-dollar-sign text-emerald-500 text-lg"></i>
+                                </div>
+                                <div>
+                                    <span class="block font-bold text-slate-700">Doble Turno</span>
+                                    <span class="block text-xs text-slate-500 font-medium" id="lbl-val-doble"></span>
+                                </div>
+                            </div>
+                            <div class="check-circle w-6 h-6 rounded-full border-2 border-slate-300 flex items-center justify-center">
+                                <i class="fa-solid fa-check text-white text-xs hidden"></i>
+                            </div>
+                        </div>
+                    </label>
+
+                    <label class="cursor-pointer">
+                        <input type="checkbox" id="chk-lluvia" class="hidden">
+                        <div class="flex items-center justify-between p-4 rounded-2xl border-2 border-slate-100 bg-white hover:border-slate-200 transition-all">
+                            <div class="flex items-center gap-4">
+                                <div class="icon-box w-10 h-10 rounded-xl flex items-center justify-center bg-slate-50">
+                                    <i class="fa-solid fa-cloud-showers-heavy text-blue-500 text-lg"></i>
+                                </div>
+                                <div>
+                                    <span class="block font-bold text-slate-700">Bono Lluvia</span>
+                                    <span class="block text-xs text-slate-500 font-medium" id="lbl-val-lluvia"></span>
+                                </div>
+                            </div>
+                            <div class="check-circle w-6 h-6 rounded-full border-2 border-slate-300 flex items-center justify-center">
+                                <i class="fa-solid fa-check text-white text-xs hidden"></i>
+                            </div>
+                        </div>
+                    </label>
+                </div>
+            </div>
+
+            <div class="mt-6 bg-slate-900 rounded-[2.5rem] p-8 text-white shadow-xl relative overflow-hidden">
+                <div class="absolute top-0 right-0 w-32 h-32 bg-indigo-500/20 rounded-full -mr-16 -mt-16 blur-3xl"></div>
+                <p class="text-slate-400 text-sm font-medium mb-1 uppercase tracking-widest">Total del día</p>
+                <h3 id="display-total" class="text-4xl font-black mb-6">$0</h3>
+                
+                <button id="btn-guardar" class="w-full bg-indigo-500 hover:bg-indigo-400 py-4 rounded-2xl font-bold text-lg transition-all shadow-lg shadow-indigo-500/30 flex items-center justify-center gap-2">
+                    <i class="fa-solid fa-floppy-disk"></i> Guardar Jornada
+                </button>
+            </div>
+        </section>
+
+        <section id="tab-historial" class="tab-content">
+            <div class="bg-white p-6 rounded-3xl shadow-sm border border-slate-100">
+                <div class="flex gap-2">
+                    <div class="flex-1">
+                        <label class="text-[10px] uppercase text-slate-400 font-bold ml-2">Desde</label>
+                        <input type="date" id="filtro-inicio" class="w-full p-3 bg-slate-50 rounded-xl text-sm border-none focus:ring-2 ring-indigo-500 outline-none">
+                    </div>
+                    <div class="flex-1">
+                        <label class="text-[10px] uppercase text-slate-400 font-bold ml-2">Hasta</label>
+                        <input type="date" id="filtro-fin" class="w-full p-3 bg-slate-50 rounded-xl text-sm border-none focus:ring-2 ring-indigo-500 outline-none">
+                    </div>
+                </div>
+            </div>
+
+            <div class="grid grid-cols-2 gap-4 mt-4">
+                <div class="bg-white p-5 rounded-3xl border border-slate-100 shadow-sm">
+                    <p class="text-slate-400 text-xs font-bold uppercase mb-1">Días</p>
+                    <p id="stat-dias" class="text-3xl font-black text-slate-800">0</p>
+                </div>
+                <div class="bg-gradient-to-br from-indigo-600 to-indigo-800 p-5 rounded-3xl shadow-lg">
+                    <p class="text-indigo-200 text-xs font-bold uppercase mb-1">Generado</p>
+                    <p id="stat-monto" class="text-xl sm:text-2xl font-black text-white">$0</p>
+                </div>
+            </div>
+
+            <button id="btn-exportar" class="w-full mt-4 bg-slate-800 text-white font-medium py-3 rounded-xl flex justify-center items-center gap-2 shadow-md hover:bg-slate-700 transition-colors">
+                <i class="fa-solid fa-download"></i> Exportar CSV (Excel)
+            </button>
+
+            <div id="lista-jornadas" class="space-y-3 mt-6">
+                </div>
+        </section>
+
+        <section id="tab-ajustes" class="tab-content">
+            <div class="bg-white p-6 rounded-3xl shadow-sm border border-slate-100">
+                <h2 class="font-bold text-slate-800 text-lg flex items-center gap-2 mb-6">
+                    <i class="fa-solid fa-gear text-indigo-500"></i> Tarifas Base
+                </h2>
+
+                <div class="space-y-4">
+                    <div>
+                        <label class="block text-xs font-bold text-slate-500 uppercase mb-1 ml-1">Sueldo Base (Hábil)</label>
+                        <div class="relative">
+                            <span class="absolute inset-y-0 left-0 pl-4 flex items-center text-slate-400 font-bold">$</span>
+                            <input type="tel" id="ajuste-base" class="w-full pl-8 pr-4 py-3 bg-slate-50 border border-slate-200 rounded-xl font-bold text-slate-800 outline-none">
+                        </div>
+                    </div>
+                    <div>
+                        <label class="block text-xs font-bold text-slate-500 uppercase mb-1 ml-1">Bono Sábado</label>
+                        <div class="relative">
+                            <span class="absolute inset-y-0 left-0 pl-4 flex items-center text-slate-400 font-bold">$</span>
+                            <input type="tel" id="ajuste-sabado" class="w-full pl-8 pr-4 py-3 bg-slate-50 border border-slate-200 rounded-xl font-bold text-slate-800 outline-none">
+                        </div>
+                    </div>
+                    <div>
+                        <label class="block text-xs font-bold text-slate-500 uppercase mb-1 ml-1">Bono Domingo</label>
+                        <div class="relative">
+                            <span class="absolute inset-y-0 left-0 pl-4 flex items-center text-slate-400 font-bold">$</span>
+                            <input type="tel" id="ajuste-domingo" class="w-full pl-8 pr-4 py-3 bg-slate-50 border border-slate-200 rounded-xl font-bold text-slate-800 outline-none">
+                        </div>
+                    </div>
+                    <div>
+                        <label class="block text-xs font-bold text-slate-500 uppercase mb-1 ml-1">Bono Feriado</label>
+                        <div class="relative">
+                            <span class="absolute inset-y-0 left-0 pl-4 flex items-center text-slate-400 font-bold">$</span>
+                            <input type="tel" id="ajuste-feriado" class="w-full pl-8 pr-4 py-3 bg-slate-50 border border-slate-200 rounded-xl font-bold text-slate-800 outline-none">
+                        </div>
+                    </div>
+                    <div>
+                        <label class="block text-xs font-bold text-slate-500 uppercase mb-1 ml-1">Bono Doble Turno</label>
+                        <div class="relative">
+                            <span class="absolute inset-y-0 left-0 pl-4 flex items-center text-slate-400 font-bold">$</span>
+                            <input type="tel" id="ajuste-doble" class="w-full pl-8 pr-4 py-3 bg-slate-50 border border-slate-200 rounded-xl font-bold text-slate-800 outline-none">
+                        </div>
+                    </div>
+                    <div>
+                        <label class="block text-xs font-bold text-slate-500 uppercase mb-1 ml-1">Bono Lluvia</label>
+                        <div class="relative">
+                            <span class="absolute inset-y-0 left-0 pl-4 flex items-center text-slate-400 font-bold">$</span>
+                            <input type="tel" id="ajuste-lluvia" class="w-full pl-8 pr-4 py-3 bg-slate-50 border border-slate-200 rounded-xl font-bold text-slate-800 outline-none">
+                        </div>
+                    </div>
+                </div>
+                <button id="btn-guardar-ajustes" class="w-full mt-6 bg-slate-900 text-white font-bold py-4 rounded-xl flex items-center justify-center gap-2 hover:bg-slate-800 transition-colors">
+                    <i class="fa-solid fa-floppy-disk"></i> Guardar Tarifas
+                </button>
+            </div>
+        </section>
+    </main>
+
+    <nav class="fixed bottom-6 left-1/2 -translate-x-1/2 w-[95%] max-w-sm bg-white border border-slate-100 p-2 flex justify-between items-center shadow-2xl z-40 rounded-3xl pb-safe">
+        <button onclick="cambiarPestana('registro')" id="nav-registro" class="nav-btn flex-1 flex flex-col items-center gap-1 py-2 px-1 rounded-2xl transition-all bg-indigo-50 text-indigo-600">
+            <i class="fa-solid fa-calendar text-xl"></i>
+            <span class="text-[10px] font-bold uppercase tracking-wider">Registro</span>
+        </button>
+        <button onclick="cambiarPestana('historial')" id="nav-historial" class="nav-btn flex-1 flex flex-col items-center gap-1 py-2 px-1 rounded-2xl transition-all text-slate-400">
+            <i class="fa-solid fa-calendar-days text-xl"></i>
+            <span class="text-[10px] font-bold uppercase tracking-wider">Historial</span>
+        </button>
+        <button onclick="cambiarPestana('ajustes')" id="nav-ajustes" class="nav-btn flex-1 flex flex-col items-center gap-1 py-2 px-1 rounded-2xl transition-all text-slate-400">
+            <i class="fa-solid fa-gear text-xl"></i>
+            <span class="text-[10px] font-bold uppercase tracking-wider">Ajustes</span>
+        </button>
+    </nav>
+
+    <script>
+        // Formateador de moneda
+        const formatea = (num) => new Intl.NumberFormat('es-CL', { style: 'currency', currency: 'CLP', maximumFractionDigits: 0 }).format(num || 0);
+        const hoyStr = new Date().toISOString().split('T')[0];
+
+        // Datos y Estado
+        const defaultTarifas = { base: 52500, sabado: 5000, domingo: 15000, feriado: 15000, doble: 20000, lluvia: 20000 };
+        let tarifas = JSON.parse(localStorage.getItem('tarifas_turnos')) || defaultTarifas;
+        let jornadas = JSON.parse(localStorage.getItem('jornadas_guardadas')) || [];
+        
+        let totalCalculado = 0;
+        let tipoDiaActual = 'Hábil';
+
+        // Referencias DOM - Registro
+        const refFecha = document.getElementById('input-fecha');
+        const refChkFeriado = document.getElementById('chk-feriado');
+        const refChkDoble = document.getElementById('chk-doble');
+        const refChkLluvia = document.getElementById('chk-lluvia');
+        const refLblTipoDia = document.getElementById('lbl-tipo-dia');
+        const refLblBonoDia = document.getElementById('lbl-bono-dia');
+        const refDisplayTotal = document.getElementById('display-total');
+
+        // Referencias DOM - Filtros
+        const refFiltroInicio = document.getElementById('filtro-inicio');
+        const refFiltroFin = document.getElementById('filtro-fin');
+
+        // Función para mostrar notificaciones (Toast)
+        function mostrarToast(mensaje, tipo = "exito") {
+            const toast = document.getElementById('toast');
+            const icon = document.getElementById('toast-icon');
+            document.getElementById('toast-msg').innerText = mensaje;
+            
+            toast.className = `fixed top-20 left-1/2 -translate-x-1/2 z-50 px-6 py-3 rounded-full shadow-2xl text-white font-medium flex items-center gap-2 transition-opacity duration-300 ${tipo === 'error' ? 'bg-red-500' : 'bg-emerald-500'}`;
+            icon.className = `fa-solid ${tipo === 'error' ? 'fa-circle-xmark' : 'fa-circle-check'}`;
+            
+            toast.classList.remove('opacity-0', 'pointer-events-none');
+            setTimeout(() => toast.classList.add('opacity-0', 'pointer-events-none'), 3000);
+        }
+
+        // --- LÓGICA DE REGISTRO ---
+        function actualizarCalculos() {
+            const fechaVal = refFecha.value;
+            if(!fechaVal) return;
+
+            // Detectar tipo de día
+            const d = new Date(fechaVal.replace(/-/g, '\/'));
+            const diaSemana = d.getDay();
+            let bonoDia = 0;
+            tipoDiaActual = 'Hábil';
+
+            if (diaSemana === 6) { tipoDiaActual = 'Sábado'; bonoDia = Number(tarifas.sabado); }
+            else if (diaSemana === 0) { tipoDiaActual = 'Domingo'; bonoDia = Number(tarifas.domingo); }
+
+            refLblTipoDia.innerText = tipoDiaActual;
+            if(bonoDia > 0) {
+                refLblBonoDia.innerText = `+ ${formatea(bonoDia)}`;
+                refLblBonoDia.classList.remove('hidden');
+            } else {
+                refLblBonoDia.classList.add('hidden');
+            }
+
+            // Calcular Total
+            totalCalculado = Number(tarifas.base) + bonoDia;
+            if(refChkFeriado.checked) totalCalculado += Number(tarifas.feriado);
+            if(refChkDoble.checked) totalCalculado += Number(tarifas.doble);
+            if(refChkLluvia.checked) tot

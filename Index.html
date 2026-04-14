@@ -1,0 +1,321 @@
+```html
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Control de Turnos</title>
+    
+    <!-- Enlace al Manifest Físico para PWABuilder -->
+    <link rel="manifest" href="manifest.json">
+    
+    <!-- Etiquetas PWA -->
+    <meta name="mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <meta name="theme-color" content="#4f46e5">
+    
+    <!-- Iconos FontAwesome -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+
+    <style>
+        /* ================= VARIABLES Y RESET ================= */
+        :root {
+            --primary: #4f46e5;      /* Indigo 600 */
+            --primary-hover: #4338ca;/* Indigo 700 */
+            --primary-light: #eef2ff;/* Indigo 50 */
+            --bg-color: #f8fafc;     /* Slate 50 */
+            --surface: #ffffff;
+            --text-main: #1e293b;    /* Slate 800 */
+            --text-muted: #64748b;   /* Slate 500 */
+            --border-color: #f1f5f9; /* Slate 100 */
+            --border-dark: #e2e8f0;  /* Slate 200 */
+            --success: #10b981;      /* Emerald 500 */
+            --warning: #f97316;      /* Orange 500 */
+            --danger: #ef4444;       /* Red 500 */
+            --info: #3b82f6;         /* Blue 500 */
+        }
+
+        * { margin: 0; padding: 0; box-sizing: border-box; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif; }
+        body { background-color: var(--bg-color); color: var(--text-main); -webkit-tap-highlight-color: transparent; padding-bottom: 90px; }
+        ::backdrop { background-color: var(--bg-color); }
+        
+        /* Ocultar input number arrows */
+        input[type=number]::-webkit-inner-spin-button, input[type=number]::-webkit-outer-spin-button { -webkit-appearance: none; margin: 0; }
+
+        /* ================= UTILIDADES ================= */
+        .container { max-width: 480px; margin: 0 auto; padding: 16px; }
+        .hidden { display: none !important; }
+        .flex { display: flex; }
+        .items-center { align-items: center; }
+        .justify-between { justify-content: space-between; }
+        .justify-center { justify-content: center; }
+        .gap-2 { gap: 8px; }
+        .gap-3 { gap: 12px; }
+        .gap-4 { gap: 16px; }
+        .w-full { width: 100%; }
+        .text-center { text-align: center; }
+        .font-bold { font-weight: 700; }
+        .text-sm { font-size: 0.875rem; }
+        .text-xs { font-size: 0.75rem; }
+        .uppercase { text-transform: uppercase; }
+
+        /* ================= COMPONENTES ================= */
+        /* Header */
+        header { background-color: var(--primary); color: white; padding: 16px; position: sticky; top: 0; z-index: 30; box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1); }
+        .header-content { max-width: 480px; margin: 0 auto; display: flex; justify-content: space-between; align-items: center; }
+        .btn-icon { width: 40px; height: 40px; border-radius: 50%; border: none; background: rgba(255,255,255,0.2); color: white; cursor: pointer; display: flex; align-items: center; justify-content: center; transition: background 0.2s; }
+        .btn-icon:active { background: rgba(255,255,255,0.3); transform: scale(0.95); }
+
+        /* Tarjetas */
+        .card { background-color: var(--surface); padding: 24px; border-radius: 24px; box-shadow: 0 1px 3px 0 rgba(0, 0, 0, 0.1); border: 1px solid var(--border-color); margin-bottom: 24px; }
+        .card-title { display: flex; align-items: center; gap: 8px; color: var(--primary); font-size: 1.125rem; font-weight: 700; margin-bottom: 16px; }
+        
+        /* Inputs Generales */
+        .input-group { margin-bottom: 16px; }
+        .input-label { display: block; font-size: 0.75rem; font-weight: 700; color: var(--text-muted); text-transform: uppercase; margin-bottom: 4px; margin-left: 4px; }
+        .input-control { width: 100%; padding: 12px 16px; background-color: var(--bg-color); border: 1px solid var(--border-dark); border-radius: 12px; font-size: 1rem; font-weight: 600; color: var(--text-main); outline: none; transition: border-color 0.2s; }
+        .input-control:focus { border-color: var(--primary); box-shadow: 0 0 0 2px var(--primary-light); }
+        
+        /* Input Dinero (con icono) */
+        .input-money-wrapper { position: relative; }
+        .input-money-icon { position: absolute; left: 16px; top: 50%; transform: translateY(-50%); color: var(--text-muted); font-weight: bold; }
+        .input-money { padding-left: 32px; }
+
+        /* Etiqueta Día Detectado */
+        .badge-dia { background-color: var(--primary-light); color: var(--primary-hover); padding: 12px; border-radius: 12px; font-size: 0.875rem; font-weight: 600; display: inline-flex; align-items: center; gap: 8px; margin-bottom: 16px; }
+        .badge-bono { background-color: rgba(79, 70, 229, 0.2); color: var(--primary-hover); padding: 2px 8px; border-radius: 4px; font-size: 0.75rem; }
+
+        /* Botones Toggle (Checkboxes customizados) */
+        .toggle-btn { display: block; cursor: pointer; margin-bottom: 12px; }
+        .toggle-btn input[type="checkbox"] { display: none; }
+        .toggle-content { display: flex; align-items: center; justify-content: space-between; padding: 16px; border-radius: 16px; border: 2px solid var(--border-color); background-color: var(--surface); transition: all 0.2s; }
+        .toggle-icon-box { width: 40px; height: 40px; border-radius: 12px; display: flex; align-items: center; justify-content: center; background-color: var(--bg-color); font-size: 1.125rem; }
+        .toggle-text { flex: 1; margin-left: 16px; }
+        .toggle-title { display: block; font-weight: 700; color: var(--text-main); }
+        .toggle-subtitle { display: block; font-size: 0.75rem; color: var(--text-muted); font-weight: 600; margin-top: 2px; }
+        .toggle-check { width: 24px; height: 24px; border-radius: 50%; border: 2px solid var(--text-muted); display: flex; align-items: center; justify-content: center; }
+        .toggle-check i { display: none; color: white; font-size: 0.75rem; }
+
+        /* Estado Activo del Toggle */
+        .toggle-btn input[type="checkbox"]:checked + .toggle-content { border-color: var(--primary); background-color: var(--primary-light); }
+        .toggle-btn input[type="checkbox"]:checked + .toggle-content .toggle-icon-box { background-color: white; box-shadow: 0 1px 2px rgba(0,0,0,0.05); }
+        .toggle-btn input[type="checkbox"]:checked + .toggle-content .toggle-check { border-color: var(--primary); background-color: var(--primary); }
+        .toggle-btn input[type="checkbox"]:checked + .toggle-content .toggle-check i { display: block; }
+
+        /* Panel Total (Oscuro) */
+        .panel-total { background-color: #0f172a; padding: 32px; border-radius: 40px; color: white; text-align: center; position: relative; overflow: hidden; box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04); }
+        .panel-total::before { content: ''; position: absolute; top: -50px; right: -50px; width: 150px; height: 150px; background-color: rgba(79, 70, 229, 0.3); border-radius: 50%; filter: blur(40px); }
+        .panel-subtitle { color: #94a3b8; font-size: 0.875rem; font-weight: 600; text-transform: uppercase; letter-spacing: 0.05em; margin-bottom: 8px; }
+        .panel-amount { font-size: 2.5rem; font-weight: 900; margin-bottom: 24px; }
+        
+        /* Botón Acción Principal */
+        .btn-primary { width: 100%; padding: 16px; background-color: var(--primary); color: white; border: none; border-radius: 16px; font-size: 1.125rem; font-weight: 700; display: flex; align-items: center; justify-content: center; gap: 8px; cursor: pointer; transition: background 0.2s; box-shadow: 0 10px 15px -3px rgba(79, 70, 229, 0.3); }
+        .btn-primary:hover { background-color: var(--primary-hover); }
+        .btn-primary:active { transform: scale(0.98); }
+        .btn-secondary { background-color: var(--text-main); box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1); }
+        .btn-secondary:hover { background-color: #334155; }
+        .btn-outline { background-color: var(--primary-light); color: var(--primary); box-shadow: none; border: 1px solid var(--primary); }
+
+        /* Grilla Estadísticas */
+        .stats-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; margin-bottom: 16px; }
+        .stat-card { padding: 20px; border-radius: 24px; border: 1px solid var(--border-color); background-color: var(--surface); }
+        .stat-card.featured { background: linear-gradient(135deg, var(--primary), var(--primary-hover)); color: white; border: none; box-shadow: 0 10px 15px -3px rgba(79, 70, 229, 0.3); }
+        .stat-title { font-size: 0.75rem; font-weight: 700; text-transform: uppercase; margin-bottom: 4px; color: var(--text-muted); }
+        .stat-card.featured .stat-title { color: rgba(255,255,255,0.7); }
+        .stat-value { font-size: 1.875rem; font-weight: 900; }
+
+        /* Lista Historial */
+        .list-item { background-color: var(--surface); padding: 20px; border-radius: 16px; display: flex; justify-content: space-between; align-items: center; border: 1px solid var(--border-color); margin-bottom: 12px; }
+        .list-date { font-weight: 700; color: var(--text-main); margin-bottom: 4px; }
+        .list-tags { display: flex; flex-wrap: wrap; gap: 4px; margin-top: 8px; }
+        .tag { font-size: 0.625rem; font-weight: 700; text-transform: uppercase; padding: 2px 8px; border-radius: 4px; }
+        .tag-default { background-color: var(--border-color); color: var(--text-muted); }
+        .tag-feriado { background-color: #ffedd5; color: #ea580c; border: 1px solid #fed7aa; }
+        .tag-doble { background-color: #d1fae5; color: #059669; border: 1px solid #a7f3d0; }
+        .tag-lluvia { background-color: #dbeafe; color: #2563eb; border: 1px solid #bfdbfe; }
+        .list-amount { font-size: 1.25rem; font-weight: 900; color: var(--primary); }
+        .btn-delete { background: var(--bg-color); border: none; padding: 8px 12px; border-radius: 8px; color: var(--text-muted); cursor: pointer; transition: color 0.2s; margin-top: 8px; }
+        .btn-delete:hover { color: var(--danger); background: #fee2e2; }
+
+        /* Pestañas (Navegación) */
+        .tab-content { display: none; animation: fadeIn 0.3s ease-in-out; }
+        .tab-content.active { display: block; }
+        
+        .navbar { position: fixed; bottom: 24px; left: 50%; transform: translateX(-50%); width: 95%; max-width: 400px; background-color: var(--surface); border: 1px solid var(--border-color); padding: 8px; display: flex; justify-content: space-between; border-radius: 32px; box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04); z-index: 40; padding-bottom: calc(8px + env(safe-area-inset-bottom, 0px)); }
+        .nav-btn { flex: 1; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 4px; padding: 12px 4px; border: none; background: transparent; color: var(--text-muted); border-radius: 24px; cursor: pointer; transition: all 0.2s; }
+        .nav-btn.active { background-color: var(--primary-light); color: var(--primary); }
+        .nav-icon { font-size: 1.25rem; }
+        .nav-label { font-size: 0.625rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.05em; }
+
+        /* Toast (Notificaciones) */
+        .toast { position: fixed; top: 80px; left: 50%; transform: translateX(-50%); z-index: 50; padding: 12px 24px; border-radius: 50px; color: white; font-weight: 600; display: flex; align-items: center; gap: 8px; box-shadow: 0 10px 15px -3px rgba(0,0,0,0.2); opacity: 0; pointer-events: none; transition: opacity 0.3s; }
+        .toast.show { opacity: 1; }
+        .toast.success { background-color: var(--success); }
+        .toast.error { background-color: var(--danger); }
+    </style>
+
+    <!-- Service Worker para PWABuilder -->
+    <script>
+        if ('serviceWorker' in navigator) {
+            window.addEventListener('load', () => {
+                const swCode = "self.addEventListener('install', e => self.skipWaiting()); self.addEventListener('activate', e => self.clients.claim()); self.addEventListener('fetch', e => {});";
+                const blob = new Blob([swCode], {type: 'application/javascript'});
+                navigator.serviceWorker.register(URL.createObjectURL(blob)).catch(()=>console.log("SW bypass"));
+            });
+        }
+    </script>
+</head>
+<body>
+
+    <!-- ================= HEADER ================= -->
+    <header>
+        <div class="header-content">
+            <div class="flex items-center gap-3">
+                <i class="fa-solid fa-calendar-days" style="font-size: 1.25rem;"></i>
+                <span class="font-bold text-lg">Control de Turnos</span>
+            </div>
+            <!-- Botón de Pantalla Completa -->
+            <button id="btn-fullscreen" class="btn-icon" title="Pantalla Completa">
+                <i class="fa-solid fa-expand"></i>
+            </button>
+        </div>
+    </header>
+
+    <!-- ================= NOTIFICACIÓN TOAST ================= -->
+    <div id="toast" class="toast">
+        <i id="toast-icon" class="fa-solid"></i>
+        <span id="toast-msg"></span>
+    </div>
+
+    <div class="container">
+        <!-- ================= PESTAÑA 1: REGISTRO ================= -->
+        <section id="tab-registro" class="tab-content active">
+            <div class="card">
+                <h2 class="card-title">
+                    <i class="fa-regular fa-calendar"></i> Nuevo Registro
+                </h2>
+
+                <div class="input-group">
+                    <input type="date" id="input-fecha" class="input-control">
+                </div>
+                
+                <div class="badge-dia">
+                    Día detectado: <span id="lbl-tipo-dia">Hábil</span> 
+                    <span id="lbl-bono-dia" class="badge-bono hidden"></span>
+                </div>
+                
+                <!-- Bonos -->
+                <label class="toggle-btn">
+                    <input type="checkbox" id="chk-feriado">
+                    <div class="toggle-content">
+                        <div class="flex items-center">
+                            <div class="toggle-icon-box"><i class="fa-solid fa-sun" style="color: var(--warning);"></i></div>
+                            <div class="toggle-text">
+                                <span class="toggle-title">Feriado</span>
+                                <span class="toggle-subtitle" id="lbl-val-feriado"></span>
+                            </div>
+                        </div>
+                        <div class="toggle-check"><i class="fa-solid fa-check"></i></div>
+                    </div>
+                </label>
+
+                <label class="toggle-btn">
+                    <input type="checkbox" id="chk-doble">
+                    <div class="toggle-content">
+                        <div class="flex items-center">
+                            <div class="toggle-icon-box"><i class="fa-solid fa-dollar-sign" style="color: var(--success);"></i></div>
+                            <div class="toggle-text">
+                                <span class="toggle-title">Doble Turno</span>
+                                <span class="toggle-subtitle" id="lbl-val-doble"></span>
+                            </div>
+                        </div>
+                        <div class="toggle-check"><i class="fa-solid fa-check"></i></div>
+                    </div>
+                </label>
+
+                <label class="toggle-btn">
+                    <input type="checkbox" id="chk-lluvia">
+                    <div class="toggle-content">
+                        <div class="flex items-center">
+                            <div class="toggle-icon-box"><i class="fa-solid fa-cloud-showers-heavy" style="color: var(--info);"></i></div>
+                            <div class="toggle-text">
+                                <span class="toggle-title">Bono Lluvia</span>
+                                <span class="toggle-subtitle" id="lbl-val-lluvia"></span>
+                            </div>
+                        </div>
+                        <div class="toggle-check"><i class="fa-solid fa-check"></i></div>
+                    </div>
+                </label>
+            </div>
+
+            <!-- Panel de Total -->
+            <div class="panel-total">
+                <p class="panel-subtitle">Total del día</p>
+                <h3 id="display-total" class="panel-amount">$0</h3>
+                
+                <button id="btn-guardar" class="btn-primary">
+                    <i class="fa-solid fa-floppy-disk"></i> Guardar Jornada
+                </button>
+            </div>
+        </section>
+
+        <!-- ================= PESTAÑA 2: HISTORIAL Y GESTIÓN ================= -->
+        <section id="tab-historial" class="tab-content">
+            <!-- Filtros -->
+            <div class="card" style="padding: 16px;">
+                <div class="flex gap-3">
+                    <div class="w-full">
+                        <label class="input-label">Desde</label>
+                        <input type="date" id="filtro-inicio" class="input-control" style="padding: 8px 12px; font-size: 0.875rem;">
+                    </div>
+                    <div class="w-full">
+                        <label class="input-label">Hasta</label>
+                        <input type="date" id="filtro-fin" class="input-control" style="padding: 8px 12px; font-size: 0.875rem;">
+                    </div>
+                </div>
+            </div>
+
+            <!-- Resumen numérico -->
+            <div class="stats-grid">
+                <div class="stat-card">
+                    <p class="stat-title">Días Trabajados</p>
+                    <p id="stat-dias" class="stat-value">0</p>
+                </div>
+                <div class="stat-card featured">
+                    <p class="stat-title">Monto Generado</p>
+                    <p id="stat-monto" class="stat-value" style="font-size: 1.5rem;">$0</p>
+                </div>
+            </div>
+
+            <!-- Controles de Importación / Exportación -->
+            <div class="flex gap-3 mb-6">
+                <button id="btn-exportar" class="btn-primary btn-secondary" style="padding: 12px; font-size: 0.875rem;">
+                    <i class="fa-solid fa-download"></i> Descargar CSV
+                </button>
+                <label class="btn-primary btn-outline" style="padding: 12px; font-size: 0.875rem; cursor: pointer; text-align: center;">
+                    <i class="fa-solid fa-file-import"></i> Importar CSV
+                    <input type="file" id="input-importar" accept=".csv" class="hidden">
+                </label>
+            </div>
+
+            <h3 style="font-weight: 700; margin-bottom: 12px; color: var(--text-muted); font-size: 0.875rem; text-transform: uppercase;">Detalle de Días</h3>
+            <!-- Lista de Registros -->
+            <div id="lista-jornadas">
+                <!-- Se inyectan aquí vía JS -->
+            </div>
+        </section>
+
+        <!-- ================= PESTAÑA 3: AJUSTES ================= -->
+        <section id="tab-ajustes" class="tab-content">
+            <div class="card">
+                <h2 class="card-title">
+                    <i class="fa-solid fa-gear"></i> Tarifas Base
+                </h2>
+
+                <div class="input-group">
+                    <label class="input-label">Sueldo Base (Hábil)</label>
+                    <div class="input-money-wrapper">
+                        <span class="input-money-icon">$</span>
+                        <input type="number" id="ajuste-base" class="input-control input-money">
+                    </

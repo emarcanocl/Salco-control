@@ -1,3 +1,4 @@
+```html
 <!DOCTYPE html>
 <html lang="es">
 <head>
@@ -20,26 +21,25 @@
     <style>
         /* ================= VARIABLES Y RESET ================= */
         :root {
-            --primary: #4f46e5;      /* Indigo 600 */
-            --primary-hover: #4338ca;/* Indigo 700 */
-            --primary-light: #eef2ff;/* Indigo 50 */
-            --bg-color: #f8fafc;     /* Slate 50 */
+            --primary: #4f46e5;      
+            --primary-hover: #4338ca;
+            --primary-light: #eef2ff;
+            --bg-color: #f8fafc;     
             --surface: #ffffff;
-            --text-main: #1e293b;    /* Slate 800 */
-            --text-muted: #64748b;   /* Slate 500 */
-            --border-color: #f1f5f9; /* Slate 100 */
-            --border-dark: #e2e8f0;  /* Slate 200 */
-            --success: #10b981;      /* Emerald 500 */
-            --warning: #f97316;      /* Orange 500 */
-            --danger: #ef4444;       /* Red 500 */
-            --info: #3b82f6;         /* Blue 500 */
+            --text-main: #1e293b;    
+            --text-muted: #64748b;   
+            --border-color: #f1f5f9; 
+            --border-dark: #e2e8f0;  
+            --success: #10b981;      
+            --warning: #f97316;      
+            --danger: #ef4444;       
+            --info: #3b82f6;         
         }
 
         * { margin: 0; padding: 0; box-sizing: border-box; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif; }
         body { background-color: var(--bg-color); color: var(--text-main); -webkit-tap-highlight-color: transparent; padding-bottom: 90px; }
         ::backdrop { background-color: var(--bg-color); }
         
-        /* Ocultar input number arrows */
         input[type=number]::-webkit-inner-spin-button, input[type=number]::-webkit-outer-spin-button { -webkit-appearance: none; margin: 0; }
 
         /* ================= UTILIDADES ================= */
@@ -60,32 +60,26 @@
         .uppercase { text-transform: uppercase; }
 
         /* ================= COMPONENTES ================= */
-        /* Header */
         header { background-color: var(--primary); color: white; padding: 16px; position: sticky; top: 0; z-index: 30; box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1); }
         .header-content { max-width: 480px; margin: 0 auto; display: flex; justify-content: space-between; align-items: center; }
         .btn-icon { width: 40px; height: 40px; border-radius: 50%; border: none; background: rgba(255,255,255,0.2); color: white; cursor: pointer; display: flex; align-items: center; justify-content: center; transition: background 0.2s; }
         .btn-icon:active { background: rgba(255,255,255,0.3); transform: scale(0.95); }
 
-        /* Tarjetas */
         .card { background-color: var(--surface); padding: 24px; border-radius: 24px; box-shadow: 0 1px 3px 0 rgba(0, 0, 0, 0.1); border: 1px solid var(--border-color); margin-bottom: 24px; }
         .card-title { display: flex; align-items: center; gap: 8px; color: var(--primary); font-size: 1.125rem; font-weight: 700; margin-bottom: 16px; }
         
-        /* Inputs Generales */
         .input-group { margin-bottom: 16px; }
         .input-label { display: block; font-size: 0.75rem; font-weight: 700; color: var(--text-muted); text-transform: uppercase; margin-bottom: 4px; margin-left: 4px; }
         .input-control { width: 100%; padding: 12px 16px; background-color: var(--bg-color); border: 1px solid var(--border-dark); border-radius: 12px; font-size: 1rem; font-weight: 600; color: var(--text-main); outline: none; transition: border-color 0.2s; }
         .input-control:focus { border-color: var(--primary); box-shadow: 0 0 0 2px var(--primary-light); }
         
-        /* Input Dinero (con icono) */
         .input-money-wrapper { position: relative; }
         .input-money-icon { position: absolute; left: 16px; top: 50%; transform: translateY(-50%); color: var(--text-muted); font-weight: bold; }
         .input-money { padding-left: 32px; }
 
-        /* Etiqueta Día Detectado */
         .badge-dia { background-color: var(--primary-light); color: var(--primary-hover); padding: 12px; border-radius: 12px; font-size: 0.875rem; font-weight: 600; display: inline-flex; align-items: center; gap: 8px; margin-bottom: 16px; }
         .badge-bono { background-color: rgba(79, 70, 229, 0.2); color: var(--primary-hover); padding: 2px 8px; border-radius: 4px; font-size: 0.75rem; }
 
-        /* Botones Toggle (Checkboxes customizados) */
         .toggle-btn { display: block; cursor: pointer; margin-bottom: 12px; }
         .toggle-btn input[type="checkbox"] { display: none; }
         .toggle-content { display: flex; align-items: center; justify-content: space-between; padding: 16px; border-radius: 16px; border: 2px solid var(--border-color); background-color: var(--surface); transition: all 0.2s; }
@@ -96,19 +90,16 @@
         .toggle-check { width: 24px; height: 24px; border-radius: 50%; border: 2px solid var(--text-muted); display: flex; align-items: center; justify-content: center; }
         .toggle-check i { display: none; color: white; font-size: 0.75rem; }
 
-        /* Estado Activo del Toggle */
         .toggle-btn input[type="checkbox"]:checked + .toggle-content { border-color: var(--primary); background-color: var(--primary-light); }
         .toggle-btn input[type="checkbox"]:checked + .toggle-content .toggle-icon-box { background-color: white; box-shadow: 0 1px 2px rgba(0,0,0,0.05); }
         .toggle-btn input[type="checkbox"]:checked + .toggle-content .toggle-check { border-color: var(--primary); background-color: var(--primary); }
         .toggle-btn input[type="checkbox"]:checked + .toggle-content .toggle-check i { display: block; }
 
-        /* Panel Total (Oscuro) */
         .panel-total { background-color: #0f172a; padding: 32px; border-radius: 40px; color: white; text-align: center; position: relative; overflow: hidden; box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04); }
         .panel-total::before { content: ''; position: absolute; top: -50px; right: -50px; width: 150px; height: 150px; background-color: rgba(79, 70, 229, 0.3); border-radius: 50%; filter: blur(40px); }
         .panel-subtitle { color: #94a3b8; font-size: 0.875rem; font-weight: 600; text-transform: uppercase; letter-spacing: 0.05em; margin-bottom: 8px; }
         .panel-amount { font-size: 2.5rem; font-weight: 900; margin-bottom: 24px; }
         
-        /* Botón Acción Principal */
         .btn-primary { width: 100%; padding: 16px; background-color: var(--primary); color: white; border: none; border-radius: 16px; font-size: 1.125rem; font-weight: 700; display: flex; align-items: center; justify-content: center; gap: 8px; cursor: pointer; transition: background 0.2s; box-shadow: 0 10px 15px -3px rgba(79, 70, 229, 0.3); }
         .btn-primary:hover { background-color: var(--primary-hover); }
         .btn-primary:active { transform: scale(0.98); }
@@ -116,7 +107,6 @@
         .btn-secondary:hover { background-color: #334155; }
         .btn-outline { background-color: var(--primary-light); color: var(--primary); box-shadow: none; border: 1px solid var(--primary); }
 
-        /* Grilla Estadísticas */
         .stats-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; margin-bottom: 16px; }
         .stat-card { padding: 20px; border-radius: 24px; border: 1px solid var(--border-color); background-color: var(--surface); }
         .stat-card.featured { background: linear-gradient(135deg, var(--primary), var(--primary-hover)); color: white; border: none; box-shadow: 0 10px 15px -3px rgba(79, 70, 229, 0.3); }
@@ -124,7 +114,6 @@
         .stat-card.featured .stat-title { color: rgba(255,255,255,0.7); }
         .stat-value { font-size: 1.875rem; font-weight: 900; }
 
-        /* Lista Historial */
         .list-item { background-color: var(--surface); padding: 20px; border-radius: 16px; display: flex; justify-content: space-between; align-items: center; border: 1px solid var(--border-color); margin-bottom: 12px; }
         .list-date { font-weight: 700; color: var(--text-main); margin-bottom: 4px; }
         .list-tags { display: flex; flex-wrap: wrap; gap: 4px; margin-top: 8px; }
@@ -137,7 +126,6 @@
         .btn-delete { background: var(--bg-color); border: none; padding: 8px 12px; border-radius: 8px; color: var(--text-muted); cursor: pointer; transition: color 0.2s; margin-top: 8px; }
         .btn-delete:hover { color: var(--danger); background: #fee2e2; }
 
-        /* Pestañas (Navegación) */
         .tab-content { display: none; animation: fadeIn 0.3s ease-in-out; }
         .tab-content.active { display: block; }
         
@@ -147,7 +135,6 @@
         .nav-icon { font-size: 1.25rem; }
         .nav-label { font-size: 0.625rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.05em; }
 
-        /* Toast (Notificaciones) */
         .toast { position: fixed; top: 80px; left: 50%; transform: translateX(-50%); z-index: 50; padding: 12px 24px; border-radius: 50px; color: white; font-weight: 600; display: flex; align-items: center; gap: 8px; box-shadow: 0 10px 15px -3px rgba(0,0,0,0.2); opacity: 0; pointer-events: none; transition: opacity 0.3s; }
         .toast.show { opacity: 1; }
         .toast.success { background-color: var(--success); }
@@ -317,4 +304,19 @@
                     <div class="input-money-wrapper">
                         <span class="input-money-icon">$</span>
                         <input type="number" id="ajuste-base" class="input-control input-money">
-                    </
+                    </div>
+                </div>
+                
+                <div class="input-group">
+                    <label class="input-label">Bono Sábado</label>
+                    <div class="input-money-wrapper">
+                        <span class="input-money-icon">$</span>
+                        <input type="number" id="ajuste-sabado" class="input-control input-money">
+                    </div>
+                </div>
+                
+                <div class="input-group">
+                    <label class="input-label">Bono Domingo</label>
+                    <div class="input-money-wrapper">
+                        <span class="input-money-icon">$</span>
+           
